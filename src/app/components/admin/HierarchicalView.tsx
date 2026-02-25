@@ -73,7 +73,7 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:3000/view-all');
+      const response = await fetch('http://localhost:3000/api/view-all');
       if (!response.ok) throw new Error('Failed to fetch data');
       const result = await response.json();
       setData(result);
