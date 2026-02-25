@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronRight, FolderOpen, Folder, FileText, BookOpen, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { ChevronDown, ChevronRight, FolderOpen, Folder, FileText, BookOpen, Loader2, AlertCircle, RefreshCw, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { StyledSelect } from './StyledSelect';
 
 interface HierarchicalViewProps {
   isDark: boolean;
@@ -68,6 +69,20 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
   const [expandedLevels, setExpandedLevels] = useState<Set<string>>(new Set());
+
+  // Modals state
+  const [showStageModal, setShowStageModal] = useState(false);
+  const [showLevelModal, setShowLevelModal] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [selectedStageId, setSelectedStageId] = useState<string>('');
+
+  // Form state
+  const [stageForm, setStageForm] = useState({ name: '', description: '', order: 0 });
+  const [levelForm, setLevelForm] = useState({ name: '', description: '', order: 0, xpReward: 100, difficulty: 'MEDIUM' });
+
+  // Loading states for create operations
+  const [isCreatingStage, setIsCreatingStage] = useState(false);
+  const [isCreatingLevel, setIsCreatingLevel] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -160,6 +175,125 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
       case 'MEDIUM': return isDark ? 'bg-amber-900/30 text-amber-400' : 'bg-amber-100 text-amber-700';
       case 'HARD': return isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-700';
       default: return '';
+    }
+  };
+
+  // Open stage modal
+  const openStageModal = (categoryId: string) => {
+    setSelectedCategoryId(categoryId);
+    setStageForm({ name: '', description: '', order: 0 });
+    setShowStageModal(true);
+  };
+
+  // Open level modal
+  const openLevelModal = (stageId: string) => {
+    setSelectedStageId(stageId);
+    setLevelForm({ name: '', description: '', order: 0, xpReward: 100, difficulty: 'MEDIUM' });
+    setShowLevelModal(true);
+  };
+
+  // Create stage
+  const createStage = async () => {
+    if (!stageForm.name) {
+      toast.error('يرجى إدخال اسم القسم');
+      return;
+    }
+
+    setIsCreatingStage(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      const slug = stageForm.name.toLowerCase().replace(/\s+/g, '-');
+
+      const response = await fetch('http://localhost:3000/api/stages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: stageForm.name,
+          slug,
+          description: stageForm.description,
+          order: stageForm.order,
+          categoryId: selectedCategoryId
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create stage');
+      }
+
+      const result = await response.json();
+      toast.success('تم إضافة القسم بنجاح');
+      setShowStageModal(false);
+
+      // Keep the category expanded after adding
+      setExpandedCategories(prev => new Set([...prev, selectedCategoryId]));
+
+      // Fetch updated data
+      await fetchData();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'فشل إضافة القسم');
+      console.error(error);
+    } finally {
+      setIsCreatingStage(false);
+    }
+  };
+
+  // Create level
+  const createLevel = async () => {
+    if (!levelForm.name) {
+      toast.error('يرجى إدخال اسم المستوى');
+      return;
+    }
+
+    setIsCreatingLevel(true);
+    try {
+      const token = localStorage.getItem('access_token');
+
+      const response = await fetch('http://localhost:3000/api/levels', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: levelForm.name,
+          description: levelForm.description,
+          order: levelForm.order,
+          xpReward: levelForm.xpReward,
+          difficulty: levelForm.difficulty,
+          stageId: selectedStageId
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create level');
+      }
+
+      const result = await response.json();
+      toast.success('تم إضافة المستوى بنجاح');
+      setShowLevelModal(false);
+
+      // Keep both the category and stage expanded after adding
+      // Find which category this stage belongs to
+      const categoryWithStage = data?.categories.find(cat =>
+        cat.stages.some(stage => stage.id === selectedStageId)
+      );
+      if (categoryWithStage) {
+        setExpandedCategories(prev => new Set([...prev, categoryWithStage.id]));
+      }
+      setExpandedStages(prev => new Set([...prev, selectedStageId]));
+
+      // Fetch updated data
+      await fetchData();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'فشل إضافة المستوى');
+      console.error(error);
+    } finally {
+      setIsCreatingLevel(false);
     }
   };
 
@@ -297,6 +431,15 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
                   <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                     {category.questionCount} أسئلة
                   </span>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); openStageModal(category.id); }}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-lg text-sm ${
+                      isDark ? 'bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'
+                    }`}
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>إضافة قسم</span>
+                  </button>
                   {expandedCategories.has(category.id) ? (
                     <ChevronDown className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
                   ) : (
@@ -308,8 +451,9 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
               {/* Stages */}
               {expandedCategories.has(category.id) && (
                 <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-[#0D1B1A]/50 p-2">
-                  <div className="space-y-2">
-                    {category.stages.map((stage) => (
+                  {category.stages.length > 0 ? (
+                    <div className="space-y-2">
+                      {category.stages.map((stage) => (
                       <div key={stage.id} className="border rounded-lg overflow-hidden" style={{ borderColor: isDark ? '#1A2C2B' : '#e5e5e5' }}>
                         {/* Stage Header */}
                         <div
@@ -329,18 +473,30 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
                               </p>
                             </div>
                           </div>
-                          {expandedStages.has(stage.id) ? (
-                            <ChevronDown className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
-                          ) : (
-                            <ChevronRight className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
-                          )}
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); openLevelModal(stage.id); }}
+                              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-sm ${
+                                isDark ? 'bg-purple-600/20 text-purple-400 hover:bg-purple-600/30' : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
+                              }`}
+                            >
+                              <Plus className="w-3 h-3" />
+                              <span>إضافة مستوى</span>
+                            </button>
+                            {expandedStages.has(stage.id) ? (
+                              <ChevronDown className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+                            ) : (
+                              <ChevronRight className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+                            )}
+                          </div>
                         </div>
 
                         {/* Levels */}
                         {expandedStages.has(stage.id) && (
                           <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0D1B1A] p-2">
-                            <div className="space-y-2">
-                              {stage.levels.map((level) => (
+                            {stage.levels.length > 0 ? (
+                              <div className="space-y-2">
+                                {stage.levels.map((level) => (
                                 <div key={level.id} className="border rounded-lg overflow-hidden" style={{ borderColor: isDark ? '#2a5a4d' : '#e5e5e5' }}>
                                   {/* Level Header */}
                                   <div
@@ -377,67 +533,354 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
 
                                   {/* Questions */}
                                   {expandedLevels.has(level.id) && (
-                                    <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-[#0D1B1A]/50 p-2 space-y-2">
-                                      {level.questions.map((question, index) => (
-                                        <div
-                                          key={question.id}
-                                          className={`p-3 rounded-lg border-2 ${
-                                            isDark ? 'bg-[#0D1B1A] border-[#2a5a4d]' : 'bg-white border-gray-200'
-                                          }`}
-                                        >
-                                          <div className="flex items-start gap-3">
-                                            <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-cairo-bold ${
-                                              isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
-                                            }`}>
-                                              {index + 1}
-                                            </span>
-                                            <div className="flex-1">
-                                              <p className={`text-sm font-cairo-medium mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                                {question.text}
-                                              </p>
-                                              <div className="grid grid-cols-2 gap-2 text-xs">
-                                                {question.options.map((option, idx) => (
-                                                  <span
-                                                    key={idx}
-                                                    className={`px-2 py-1 rounded text-center ${
-                                                      idx === question.correctAnswer
-                                                        ? isDark
-                                                          ? 'bg-emerald-600 text-white'
-                                                          : 'bg-emerald-500 text-white'
-                                                        : isDark
-                                                          ? 'bg-gray-700 text-gray-300'
-                                                          : 'bg-gray-200 text-gray-700'
-                                                    }`}
-                                                  >
-                                                    {option}
-                                                  </span>
-                                                ))}
-                                              </div>
-                                              <div className="flex items-center gap-2 mt-2">
-                                                <span className={`text-xs ${getDifficultyColor(question.difficulty)}`}>
-                                                  {getDifficultyBadge(question.difficulty)}
+                                    <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-[#0D1B1A]/50 p-2">
+                                      {level.questions.length > 0 ? (
+                                        <div className="space-y-2">
+                                          {level.questions.map((question, index) => (
+                                            <div
+                                              key={question.id}
+                                              className={`p-3 rounded-lg border-2 ${
+                                                isDark ? 'bg-[#0D1B1A] border-[#2a5a4d]' : 'bg-white border-gray-200'
+                                              }`}
+                                            >
+                                              <div className="flex items-start gap-3">
+                                                <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-cairo-bold ${
+                                                  isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
+                                                }`}>
+                                                  {index + 1}
                                                 </span>
+                                                <div className="flex-1">
+                                                  <p className={`text-sm font-cairo-medium mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                                    {question.text}
+                                                  </p>
+                                                  <div className="grid grid-cols-2 gap-2 text-xs">
+                                                    {question.options.map((option, idx) => (
+                                                      <span
+                                                        key={idx}
+                                                        className={`px-2 py-1 rounded text-center ${
+                                                          idx === question.correctAnswer
+                                                            ? isDark
+                                                              ? 'bg-emerald-600 text-white'
+                                                              : 'bg-emerald-500 text-white'
+                                                            : isDark
+                                                              ? 'bg-gray-700 text-gray-300'
+                                                              : 'bg-gray-200 text-gray-700'
+                                                        }`}
+                                                      >
+                                                        {option}
+                                                      </span>
+                                                    ))}
+                                                  </div>
+                                                  <div className="flex items-center gap-2 mt-2">
+                                                    <span className={`text-xs ${getDifficultyColor(question.difficulty)}`}>
+                                                      {getDifficultyBadge(question.difficulty)}
+                                                    </span>
+                                                  </div>
+                                                </div>
                                               </div>
                                             </div>
-                                          </div>
+                                          ))}
                                         </div>
-                                      ))}
+                                      ) : (
+                                        <div className={`p-6 text-center rounded-lg ${isDark ? 'bg-[#0D1B1A]' : 'bg-white'}`}>
+                                          <FileText className={`w-8 h-8 mx-auto mb-2 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
+                                          <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                            لا توجد أسئلة في هذا المستوى
+                                          </p>
+                                          <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                    يمكنك إضافة أسئلة من صفحة إدارة الأسئلة
+                                          </p>
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </div>
                               ))}
-                            </div>
+                              </div>
+                            ) : (
+                              <div className={`p-4 text-center rounded-lg ${isDark ? 'bg-[#0D1B1A]' : 'bg-gray-50'}`}>
+                                <FileText className={`w-8 h-8 mx-auto mb-2 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
+                                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  لا توجد مستويات في هذا القسم
+                                </p>
+                                <button
+                                  onClick={() => openLevelModal(stage.id)}
+                                  className={`mt-2 flex items-center gap-2 px-3 py-1.5 rounded-lg mx-auto text-sm ${
+                                    isDark ? 'bg-purple-600 text-white hover:bg-purple-700' : 'bg-purple-500 text-white hover:bg-purple-600'
+                                  }`}
+                                >
+                                  <Plus className="w-3 h-3" />
+                                  <span>إضافة مستوى</span>
+                                </button>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
                     ))}
-                  </div>
+                    </div>
+                  ) : (
+                    <div className={`p-6 text-center rounded-lg ${isDark ? 'bg-[#0D1B1A]' : 'bg-white'}`}>
+                      <FolderOpen className={`w-12 h-12 mx-auto mb-3 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
+                      <p className={`text-sm font-cairo-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        لا توجد أقسام في هذه الدورة
+                      </p>
+                      <button
+                        onClick={() => openStageModal(category.id)}
+                        className={`mt-3 flex items-center gap-2 px-4 py-2 rounded-xl mx-auto ${
+                          isDark ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                        }`}
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>إضافة قسم جديد</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           ))}
         </div>
       </div>
+
+      {/* Add Stage Modal */}
+      {showStageModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className={`rounded-2xl shadow-2xl w-full max-w-md ${isDark ? 'bg-[#1A2C2B]' : 'bg-white'}`}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className={`text-xl font-cairo-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  إضافة قسم جديد
+                </h3>
+                <button
+                  onClick={() => setShowStageModal(false)}
+                  className={`p-2 rounded-lg ${isDark ? 'hover:bg-[#0D1B1A]' : 'hover:bg-gray-100'}`}
+                >
+                  <X className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className={`block text-sm font-cairo-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    اسم القسم *
+                  </label>
+                  <input
+                    type="text"
+                    value={stageForm.name}
+                    onChange={(e) => setStageForm({ ...stageForm, name: e.target.value })}
+                    className={`w-full px-4 py-3 rounded-xl border-2 outline-none transition-all ${
+                      isDark
+                        ? 'bg-[#0D1B1A] border-[#2a5a4d] text-white focus:border-emerald-500'
+                        : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500'
+                    }`}
+                    placeholder="مثال: القسم الأول"
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-cairo-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    الوصف
+                  </label>
+                  <textarea
+                    value={stageForm.description}
+                    onChange={(e) => setStageForm({ ...stageForm, description: e.target.value })}
+                    className={`w-full px-4 py-3 rounded-xl border-2 outline-none transition-all resize-none ${
+                      isDark
+                        ? 'bg-[#0D1B1A] border-[#2a5a4d] text-white focus:border-emerald-500'
+                        : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500'
+                    }`}
+                    rows={3}
+                    placeholder="وصف القسم..."
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-cairo-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    الترتيب
+                  </label>
+                  <input
+                    type="number"
+                    value={stageForm.order}
+                    onChange={(e) => setStageForm({ ...stageForm, order: parseInt(e.target.value) || 0 })}
+                    className={`w-full px-4 py-3 rounded-xl border-2 outline-none transition-all ${
+                      isDark
+                        ? 'bg-[#0D1B1A] border-[#2a5a4d] text-white focus:border-emerald-500'
+                        : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500'
+                    }`}
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={createStage}
+                  disabled={isCreatingStage}
+                  className={`flex-1 py-3 rounded-xl font-cairo-semibold flex items-center justify-center gap-2 ${
+                    isDark ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                  } ${isCreatingStage ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {isCreatingStage ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>جاري الإضافة...</span>
+                    </>
+                  ) : (
+                    'إضافة القسم'
+                  )}
+                </button>
+                <button
+                  onClick={() => setShowStageModal(false)}
+                  disabled={isCreatingStage}
+                  className={`flex-1 py-3 rounded-xl font-cairo-semibold ${
+                    isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  } ${isCreatingStage ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  إلغاء
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Level Modal */}
+      {showLevelModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className={`rounded-2xl shadow-2xl w-full max-w-md ${isDark ? 'bg-[#1A2C2B]' : 'bg-white'}`}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className={`text-xl font-cairo-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  إضافة مستوى جديد
+                </h3>
+                <button
+                  onClick={() => setShowLevelModal(false)}
+                  className={`p-2 rounded-lg ${isDark ? 'hover:bg-[#0D1B1A]' : 'hover:bg-gray-100'}`}
+                >
+                  <X className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className={`block text-sm font-cairo-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    اسم المستوى *
+                  </label>
+                  <input
+                    type="text"
+                    value={levelForm.name}
+                    onChange={(e) => setLevelForm({ ...levelForm, name: e.target.value })}
+                    className={`w-full px-4 py-3 rounded-xl border-2 outline-none transition-all ${
+                      isDark
+                        ? 'bg-[#0D1B1A] border-[#2a5a4d] text-white focus:border-emerald-500'
+                        : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500'
+                    }`}
+                    placeholder="مثال: المستوى الأول"
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-cairo-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    الوصف
+                  </label>
+                  <textarea
+                    value={levelForm.description}
+                    onChange={(e) => setLevelForm({ ...levelForm, description: e.target.value })}
+                    className={`w-full px-4 py-3 rounded-xl border-2 outline-none transition-all resize-none ${
+                      isDark
+                        ? 'bg-[#0D1B1A] border-[#2a5a4d] text-white focus:border-emerald-500'
+                        : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500'
+                    }`}
+                    rows={3}
+                    placeholder="وصف المستوى..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={`block text-sm font-cairo-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      الترتيب
+                    </label>
+                    <input
+                      type="number"
+                      value={levelForm.order}
+                      onChange={(e) => setLevelForm({ ...levelForm, order: parseInt(e.target.value) || 0 })}
+                      className={`w-full px-4 py-3 rounded-xl border-2 outline-none transition-all ${
+                        isDark
+                          ? 'bg-[#0D1B1A] border-[#2a5a4d] text-white focus:border-emerald-500'
+                          : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500'
+                      }`}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-cairo-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      مكافأة XP
+                    </label>
+                    <input
+                      type="number"
+                      value={levelForm.xpReward}
+                      onChange={(e) => setLevelForm({ ...levelForm, xpReward: parseInt(e.target.value) || 100 })}
+                      className={`w-full px-4 py-3 rounded-xl border-2 outline-none transition-all ${
+                        isDark
+                          ? 'bg-[#0D1B1A] border-[#2a5a4d] text-white focus:border-emerald-500'
+                          : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500'
+                      }`}
+                      placeholder="100"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-cairo-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    الصعوبة
+                  </label>
+                  <StyledSelect
+                    value={levelForm.difficulty}
+                    onChange={(value) => setLevelForm({ ...levelForm, difficulty: value })}
+                    options={[
+                      { value: 'EASY', label: 'سهل' },
+                      { value: 'MEDIUM', label: 'متوسط' },
+                      { value: 'HARD', label: 'صعب' }
+                    ]}
+                    isDark={isDark}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={createLevel}
+                  disabled={isCreatingLevel}
+                  className={`flex-1 py-3 rounded-xl font-cairo-semibold flex items-center justify-center gap-2 ${
+                    isDark ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                  } ${isCreatingLevel ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {isCreatingLevel ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>جاري الإضافة...</span>
+                    </>
+                  ) : (
+                    'إضافة المستوى'
+                  )}
+                </button>
+                <button
+                  onClick={() => setShowLevelModal(false)}
+                  disabled={isCreatingLevel}
+                  className={`flex-1 py-3 rounded-xl font-cairo-semibold ${
+                    isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  } ${isCreatingLevel ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  إلغاء
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
