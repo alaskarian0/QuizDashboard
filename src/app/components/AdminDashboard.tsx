@@ -39,7 +39,7 @@ export function AdminDashboard({ isDark, onToggleTheme, onLogout }: AdminDashboa
   const menuItems = [
     { id: 'overview' as ActiveTab, icon: LayoutDashboard, label: 'لوحة القيادة', color: 'emerald' },
     { id: 'questions' as ActiveTab, icon: FileQuestion, label: 'إدارة الأسئلة', color: 'blue' },
-    { id: 'categories' as ActiveTab, icon: BookOpen, label: 'إدارة الفئات', color: 'purple' },
+    { id: 'categories' as ActiveTab, icon: BookOpen, label: 'إدارة الدورات', color: 'purple' },
     { id: 'users' as ActiveTab, icon: Users, label: 'إدارة المستخدمين', color: 'amber' },
     { id: 'library' as ActiveTab, icon: Library, label: 'إدارة المكتبة', color: 'indigo' },
   ];
@@ -282,7 +282,7 @@ export function AdminDashboard({ isDark, onToggleTheme, onLogout }: AdminDashboa
                     }`}>
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className={`text-sm mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>إجمالي الفئات</p>
+                        <p className={`text-sm mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>إجمالي الدورات</p>
                         {isLoading ? (
                           <div className={`h-9 w-16 rounded animate-pulse mb-2 ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
                         ) : (
@@ -350,7 +350,7 @@ export function AdminDashboard({ isDark, onToggleTheme, onLogout }: AdminDashboa
                     >
                       <BookOpen className="w-6 h-6 mx-auto mb-2" />
                       <span className="block text-center" style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 600 }}>
-                        إضافة فئة جديدة
+                        إضافة دورة جديدة
                       </span>
                     </button>
 
@@ -394,7 +394,7 @@ export function AdminDashboard({ isDark, onToggleTheme, onLogout }: AdminDashboa
                     {[
                       { action: 'تم إضافة 5 أسئلة جديدة', category: 'أصول الدين', time: 'منذ ساعتين', color: 'emerald' },
                       { action: 'انضم 23 مستخدم جديد', category: 'المستخدمين', time: 'منذ 6 ساعات', color: 'blue' },
-                      { action: 'تم إنشاء فئة جديدة', category: 'واقعة كربلاء', time: 'أمس', color: 'purple' },
+                      { action: 'تم إنشاء دورة جديدة', category: 'واقعة كربلاء', time: 'أمس', color: 'purple' },
                     ].map((activity, idx) => (
                       <div
                         key={idx}

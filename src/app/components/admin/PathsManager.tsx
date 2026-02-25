@@ -25,7 +25,7 @@ export function PathsManager({ isDark }: PathsManagerProps) {
     {
       id: 'library',
       name: 'مكتبة المعرفة',
-      description: 'أسئلة موزعة على فئات متعددة',
+      description: 'أسئلة موزعة على دورات متعددة',
       icon: BookOpen,
       color: 'cyan',
       questionsCount: 450,

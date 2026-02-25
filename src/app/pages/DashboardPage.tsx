@@ -1,4 +1,5 @@
 import { useDashboard } from '@/hooks/useDashboard';
+import { useNavigate } from 'react-router-dom';
 import { RefreshCw, TrendingUp, Activity, Award, Library, Plus } from 'lucide-react';
 
 interface DashboardPageProps {
@@ -6,37 +7,44 @@ interface DashboardPageProps {
 }
 
 export function DashboardPage({ isDark }: DashboardPageProps) {
+  const navigate = useNavigate();
   const { stats, isLoading, error, refetch } = useDashboard();
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className={isDark ? 'text-red-400' : 'text-red-600'}>
-          Failed to load dashboard data
-        </p>
-      </div>
-    );
-  }
-
   const quickActions = [
-    { id: 'add-question', label: 'إضافة سؤال جديد', icon: Plus, color: 'emerald' },
-    { id: 'add-category', label: 'إضافة فئة جديدة', icon: Library, color: 'blue' },
-    { id: 'add-content', label: 'إضافة كتاب/مقال', icon: Plus, color: 'purple' },
-    { id: 'settings', label: 'إعدادات النظام', icon: RefreshCw, color: 'gray' },
+    {
+      id: 'add-question',
+      label: 'إضافة سؤال جديد',
+      icon: Plus,
+      color: 'emerald',
+      onClick: () => navigate('/admin/questions')
+    },
+    {
+      id: 'add-category',
+      label: 'إضافة دورة جديدة',
+      icon: Library,
+      color: 'blue',
+      onClick: () => navigate('/admin/categories')
+    },
+    {
+      id: 'add-content',
+      label: 'إضافة كتاب/مقال',
+      icon: Plus,
+      color: 'purple',
+      onClick: () => navigate('/admin/library')
+    },
+    {
+      id: 'settings',
+      label: 'إعدادات النظام',
+      icon: RefreshCw,
+      color: 'gray',
+      onClick: () => refetch()
+    },
   ];
 
-  const recentActivity = stats?.recentActivity || [
+  const recentActivity = stats?.recentActivity?.length ? stats.recentActivity : [
     { title: 'تم إضافة 5 أسئلة جديدة', category: 'أصول الدين', time: 'منذ ساعتين' },
     { title: 'انضم 23 مستخدم جديد', category: 'المستخدمين', time: 'منذ 6 ساعات' },
-    { title: 'تم إنشاء فئة جديدة', category: 'واقعة كربلاء', time: 'أمس' },
+    { title: 'تم إنشاء دورة جديدة', category: 'واقعة كربلاء', time: 'أمس' },
   ];
 
   return (
@@ -52,7 +60,9 @@ export function DashboardPage({ isDark }: DashboardPageProps) {
           </p>
         </div>
         <button
-          onClick={() => refetch()}
+          onClick={() => {
+            refetch();
+          }}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
             isDark
               ? 'bg-emerald-600 text-white hover:bg-emerald-500'
@@ -130,7 +140,7 @@ export function DashboardPage({ isDark }: DashboardPageProps) {
               <Library className={`w-6 h-6 ${isDark ? 'text-amber-500' : 'text-amber-600'}`} />
             </div>
           </div>
-          <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>إجمالي الفئات</p>
+          <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>إجمالي الدورات</p>
           <h3 className={`text-3xl font-bold mt-1 ${isDark ? 'text-white' : 'text-gray-800'}`}>
             {stats?.totalCategories || 5}
           </h3>
@@ -148,7 +158,8 @@ export function DashboardPage({ isDark }: DashboardPageProps) {
             {quickActions.map((action) => (
               <button
                 key={action.id}
-                className={`flex items-center gap-2 p-3 rounded-xl transition-all ${
+                onClick={action.onClick}
+                className={`flex items-center gap-2 p-3 rounded-xl transition-all cursor-pointer ${
                   isDark
                     ? 'bg-[#0D1B1A] hover:bg-emerald-600/20 text-gray-300'
                     : 'bg-gray-50 hover:bg-[#0AA1DD]/10 text-gray-700'

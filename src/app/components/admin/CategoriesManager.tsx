@@ -34,13 +34,13 @@ export function CategoriesManager({ isDark }: CategoriesManagerProps) {
   const deleteMutation = useDeleteCategory();
 
   const handleDeleteCategory = (id: string) => {
-    if (confirm('هل أنت متأكد من حذف هذه الفئة؟')) {
+    if (confirm('هل أنت متأكد من حذف هذه الدورة؟')) {
       deleteMutation.mutate(id, {
         onSuccess: () => {
-          toast.success('تم حذف الفئة بنجاح');
+          toast.success('تم حذف الدورة بنجاح');
         },
         onError: (error: Error) => {
-          toast.error(`فشل حذف الفئة: ${error.message}`);
+          toast.error(`فشل حذف الدورة: ${error.message}`);
         }
       });
     }
@@ -55,7 +55,7 @@ export function CategoriesManager({ isDark }: CategoriesManagerProps) {
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-12 h-12 animate-spin text-purple-500" />
           <p className={`text-lg ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif" }}>
-            جاري تحميل الفئات...
+            جاري تحميل الدورات...
           </p>
         </div>
       </div>
@@ -70,7 +70,7 @@ export function CategoriesManager({ isDark }: CategoriesManagerProps) {
           <AlertCircle className="w-16 h-16 text-red-500" />
           <div className="text-center">
             <h3 className={`text-xl mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 700 }}>
-              فشل تحميل الفئات
+              فشل تحميل الدورات
             </h3>
             <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
               {error.message}
@@ -96,10 +96,10 @@ export function CategoriesManager({ isDark }: CategoriesManagerProps) {
           <div className="flex items-center justify-between">
             <div>
               <h3 className={`text-2xl mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 700 }}>
-                إدارة الفئات
+                إدارة الدورات
               </h3>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                0 فئات
+                0 دورات
               </p>
             </div>
             <button
@@ -122,7 +122,7 @@ export function CategoriesManager({ isDark }: CategoriesManagerProps) {
             <BookOpen className="w-16 h-16 text-gray-400" />
             <div className="text-center">
               <h3 className={`text-xl mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 700 }}>
-                لا توجد فئات
+                لا توجد دورات
               </h3>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                 ابدأ بإضافة فئة جديدة لتنظيم الأسئلة
@@ -139,11 +139,11 @@ export function CategoriesManager({ isDark }: CategoriesManagerProps) {
             onSave={(data) => {
               createMutation.mutate(data, {
                 onSuccess: () => {
-                  toast.success('تم إضافة الفئة بنجاح');
+                  toast.success('تم إضافة الدورة بنجاح');
                   setShowAddModal(false);
                 },
                 onError: (error: Error) => {
-                  toast.error(`فشل إضافة الفئة: ${error.message}`);
+                  toast.error(`فشل إضافة الدورة: ${error.message}`);
                 }
               });
             }}
@@ -163,10 +163,10 @@ export function CategoriesManager({ isDark }: CategoriesManagerProps) {
         <div className="flex items-center justify-between">
           <div>
             <h3 className={`text-2xl mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 700 }}>
-              إدارة الفئات
+              إدارة الدورات
             </h3>
             <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              {categories.length} فئات • {totalQuestions.toLocaleString('ar-SA')} سؤال إجمالي
+              {categories.length} دورات • {totalQuestions.toLocaleString('ar-SA')} سؤال إجمالي
             </p>
           </div>
 
@@ -320,22 +320,22 @@ export function CategoriesManager({ isDark }: CategoriesManagerProps) {
                 { id: editingCategory.id, data },
                 {
                   onSuccess: () => {
-                    toast.success('تم تحديث الفئة بنجاح');
+                    toast.success('تم تحديث الدورة بنجاح');
                     setEditingCategory(null);
                   },
                   onError: (error: Error) => {
-                    toast.error(`فشل تحديث الفئة: ${error.message}`);
+                    toast.error(`فشل تحديث الدورة: ${error.message}`);
                   }
                 }
               );
             } else {
               createMutation.mutate(data, {
                 onSuccess: () => {
-                  toast.success('تم إضافة الفئة بنجاح');
+                  toast.success('تم إضافة الدورة بنجاح');
                   setShowAddModal(false);
                 },
                 onError: (error: Error) => {
-                  toast.error(`فشل إضافة الفئة: ${error.message}`);
+                  toast.error(`فشل إضافة الدورة: ${error.message}`);
                 }
               });
             }
@@ -414,7 +414,7 @@ function AddEditCategoryModal({ isDark, category, onClose, onSave, isLoading = f
         <div className={`sticky top-0 p-6 border-b ${isDark ? 'border-[#2a5a4d] bg-[#1A2C2B]' : 'border-gray-200 bg-white'}`}>
           <div className="flex items-center justify-between">
             <h3 className={`text-2xl ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 700 }}>
-              {category ? 'تعديل الفئة' : 'إضافة فئة جديدة'}
+              {category ? 'تعديل الدورة' : 'إضافة فئة جديدة'}
             </h3>
             <button
               onClick={onClose}
@@ -429,7 +429,7 @@ function AddEditCategoryModal({ isDark, category, onClose, onSave, isLoading = f
           {/* Name */}
           <div>
             <label className={`block mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 600 }}>
-              اسم الفئة *
+              اسم الدورة *
             </label>
             <input
               type="text"
@@ -485,7 +485,7 @@ function AddEditCategoryModal({ isDark, category, onClose, onSave, isLoading = f
                   ? 'bg-[#0D1B1A] border-[#2a5a4d] text-white focus:border-emerald-500'
                   : 'bg-white border-gray-200 text-gray-900 focus:border-emerald-500'
               } outline-none disabled:opacity-50`}
-              placeholder="وصف الفئة..."
+              placeholder="وصف الدورة..."
             />
           </div>
 
@@ -571,10 +571,10 @@ function AddEditCategoryModal({ isDark, category, onClose, onSave, isLoading = f
               )}
               <div>
                 <h4 className={`text-lg mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 700 }}>
-                  {formData.name || 'اسم الفئة'}
+                  {formData.name || 'اسم الدورة'}
                 </h4>
                 <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {formData.description || 'وصف الفئة'}
+                  {formData.description || 'وصف الدورة'}
                 </p>
                 {formData.slug && (
                   <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
@@ -599,7 +599,7 @@ function AddEditCategoryModal({ isDark, category, onClose, onSave, isLoading = f
                   جاري الحفظ...
                 </>
               ) : (
-                category ? 'حفظ التعديلات' : 'إضافة الفئة'
+                category ? 'حفظ التعديلات' : 'إضافة الدورة'
               )}
             </button>
             <button

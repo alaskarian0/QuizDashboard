@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Plus, Search, Edit, Trash2, Eye, Filter, X } from 'lucide-react';
 import { useQuestions, useCreateQuestion, useUpdateQuestion, useDeleteQuestion } from '../../../hooks/useQuestions';
 import { useCategories } from '../../../hooks/useCategories';
+import { StyledSelect } from './StyledSelect';
 import type { Question as ApiQuestion, CreateQuestionDto, UpdateQuestionDto } from '../../../types/questions';
 
 interface Question {
@@ -115,34 +116,22 @@ export function QuestionsManager({ isDark }: QuestionsManagerProps) {
           </div>
 
           {/* Category Filter */}
-          <select
+          <StyledSelect
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className={`px-4 py-3 rounded-xl border-2 transition-all ${isDark
-              ? 'bg-[#0D1B1A] border-[#2a5a4d] text-white focus:border-emerald-500'
-              : 'bg-white border-gray-200 text-gray-900 focus:border-emerald-500'
-              } outline-none`}
-            style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 600 }}
-          >
-            {categoryNames.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
+            onChange={setSelectedCategory}
+            options={categoryNames.map(cat => ({ value: cat, label: cat }))}
+            isDark={isDark}
+            className="min-w-[150px]"
+          />
 
           {/* Difficulty Filter */}
-          <select
+          <StyledSelect
             value={selectedDifficulty}
-            onChange={(e) => setSelectedDifficulty(e.target.value)}
-            className={`px-4 py-3 rounded-xl border-2 transition-all ${isDark
-              ? 'bg-[#0D1B1A] border-[#2a5a4d] text-white focus:border-emerald-500'
-              : 'bg-white border-gray-200 text-gray-900 focus:border-emerald-500'
-              } outline-none`}
-            style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 600 }}
-          >
-            {difficulties.map(diff => (
-              <option key={diff} value={diff}>{diff}</option>
-            ))}
-          </select>
+            onChange={setSelectedDifficulty}
+            options={difficulties.map(diff => ({ value: diff, label: diff }))}
+            isDark={isDark}
+            className="min-w-[150px]"
+          />
 
           {/* Add Question Button */}
           <button
@@ -347,28 +336,26 @@ function AddEditQuestionModal({ isDark, question, categories, onClose, onSave }:
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={`block mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 600 }}>الفئة *</label>
-              <select
+              <label className={`block mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 600 }}>الدورة *</label>
+              <StyledSelect
                 value={formData.categoryId}
-                onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                required
-                className={`w-full px-4 py-3 rounded-xl border-2 transition-all ${isDark ? 'bg-[#0D1B1A] border-[#2a5a4d] text-white focus:border-emerald-500' : 'bg-white border-gray-200 text-gray-900 focus:border-emerald-500'} outline-none`}
-              >
-                {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-              </select>
+                onChange={(value) => setFormData({ ...formData, categoryId: value })}
+                options={categories.map(cat => ({ value: cat.id, label: cat.name }))}
+                isDark={isDark}
+              />
             </div>
             <div>
               <label className={`block mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 600 }}>مستوى الصعوبة *</label>
-              <select
+              <StyledSelect
                 value={formData.difficulty}
-                onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as 'EASY' | 'MEDIUM' | 'HARD' })}
-                required
-                className={`w-full px-4 py-3 rounded-xl border-2 transition-all ${isDark ? 'bg-[#0D1B1A] border-[#2a5a4d] text-white focus:border-emerald-500' : 'bg-white border-gray-200 text-gray-900 focus:border-emerald-500'} outline-none`}
-              >
-                <option value="EASY">سهل</option>
-                <option value="MEDIUM">متوسط</option>
-                <option value="HARD">صعب</option>
-              </select>
+                onChange={(value) => setFormData({ ...formData, difficulty: value as 'EASY' | 'MEDIUM' | 'HARD' })}
+                options={[
+                  { value: 'EASY', label: 'سهل' },
+                  { value: 'MEDIUM', label: 'متوسط' },
+                  { value: 'HARD', label: 'صعب' }
+                ]}
+                isDark={isDark}
+              />
             </div>
           </div>
 

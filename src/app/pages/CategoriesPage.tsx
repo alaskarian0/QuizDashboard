@@ -10,10 +10,10 @@ export function CategoriesPage({ isDark }: CategoriesPageProps) {
       {/* Header */}
       <div>
         <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`} style={{ fontFamily: "'Cairo', sans-serif" }}>
-          إدارة الفئات
+          إدارة الدورات
         </h2>
         <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-          إضافة وتعديل وحذف فئات الأسئلة
+          إضافة وتعديل وحذف دورات الأسئلة
         </p>
       </div>
 

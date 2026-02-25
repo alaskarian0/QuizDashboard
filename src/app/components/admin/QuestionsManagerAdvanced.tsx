@@ -104,14 +104,10 @@ export function QuestionsManagerAdvanced({ isDark }: QuestionsManagerAdvancedPro
 
   const handleSaveQuestion = async (question: Question) => {
     try {
-      // Get the category ID - use selected filter or first available category
-      let categoryId: string | undefined;
-      if (selectedCategory !== 'الكل') {
-        categoryId = categoriesData.find(c => c.name === selectedCategory)?.id;
-      }
-      // If no category selected or filter is "All", use the first available category
-      if (!categoryId && categoriesData.length > 0) {
-        categoryId = categoriesData[0].id;
+      // Use categoryId, stageId, levelId from the form
+      const categoryId = question.categoryId;
+      if (!categoryId) {
+        throw new Error('Please select a category for the question.');
       }
 
       // Get difficulty - use selected filter or default to MEDIUM
@@ -126,18 +122,20 @@ export function QuestionsManagerAdvanced({ isDark }: QuestionsManagerAdvancedPro
           text: question.question,
           options: question.options,
           correctOption: question.correctAnswer,
+          categoryId,
+          stageId: question.stageId,
+          levelId: question.levelId,
         };
         await updateMutation.mutateAsync({ id: editingQuestion.id, data: updateData });
       } else {
         // Create new question
-        if (!categoryId) {
-          throw new Error('No category available. Please create a category first.');
-        }
         const createData: CreateQuestionDto = {
           text: question.question,
           options: question.options,
           correctOption: question.correctAnswer,
           categoryId,
+          stageId: question.stageId,
+          levelId: question.levelId,
           difficulty,
           explanation: '',
         };

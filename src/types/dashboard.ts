@@ -1,14 +1,28 @@
 /**
+ * Activity item for recent activity feed
+ */
+export interface ActivityItem {
+  title: string;
+  category: string;
+  time: string;
+}
+
+/**
  * Dashboard statistics from the analytics API
  */
 export interface DashboardStats {
   totalQuestions: number;
   totalUsers: number;
   totalCategories: number;
-  questionsAddedThisMonth: number;
-  newUsersThisWeek: number;
-  averageAccuracy: number;
-  completionRate: number;
+  questionsThisMonth?: number;
+  usersThisWeek?: number;
+  questionsAddedThisMonth?: number;
+  newUsersThisWeek?: number;
+  averageAccuracy?: number;
+  accuracyRate?: number;
+  completionRate?: number;
+  adminName?: string;
+  recentActivity?: ActivityItem[];
 }
 
 /**

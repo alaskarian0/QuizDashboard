@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
-import { X, Check, Plus, Trash2 } from 'lucide-react';
+import { X, Check } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { StyledSelect } from './StyledSelect';
 
 export interface Question {
   id: string;
   question: string;
   options: string[];
   correctAnswer: number; // Index of correct answer (0-3)
+  categoryId?: string;
+  stageId?: string;
+  levelId?: string;
 }
 
 interface QuestionFormModalProps {
@@ -15,36 +20,108 @@ interface QuestionFormModalProps {
   onSave: (question: Question) => void;
 }
 
+interface Stage {
+  id: string;
+  name: string;
+  levels: Level[];
+}
+
+interface Level {
+  id: string;
+  name: string;
+}
+
+interface CategoryWithStages {
+  id: string;
+  name: string;
+  stages: Stage[];
+}
+
 export function QuestionFormModal({ isDark, question, onClose, onSave }: QuestionFormModalProps) {
   const [formData, setFormData] = useState<Question>(
     question || {
       id: Date.now().toString(),
       question: '',
       options: ['', '', '', ''],
-      correctAnswer: 0
+      correctAnswer: 0,
+      categoryId: undefined,
+      stageId: undefined,
+      levelId: undefined,
     }
   );
+
+  // Fetch categories with stages
+  const { data: categoriesData } = useQuery({
+    queryKey: ['view-all'],
+    queryFn: async () => {
+      const response = await fetch('http://localhost:3000/api/view-all');
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      const result = await response.json();
+      return result.data.categories as CategoryWithStages[];
+    },
+  });
+
+  const categories = categoriesData || [];
+
+  // Get stages for selected category
+  const selectedCategory = categories.find(c => c.id === formData.categoryId);
+  const stages = selectedCategory?.stages || [];
+
+  // Get levels for selected stage
+  const selectedStage = stages.find(s => s.id === formData.stageId);
+  const levels = selectedStage?.levels || [];
 
   useEffect(() => {
     if (question) {
       setFormData(question);
+    } else {
+      // Auto-select first category, stage, and level when adding new question
+      if (categories.length > 0) {
+        const firstCategory = categories[0];
+        if (firstCategory.stages.length > 0) {
+          const firstStage = firstCategory.stages[0];
+          if (firstStage.levels.length > 0) {
+            setFormData(prev => ({
+              ...prev,
+              categoryId: firstCategory.id,
+              stageId: firstStage.id,
+              levelId: firstStage.levels[0].id,
+            }));
+          }
+        }
+      }
     }
-  }, [question]);
+  }, [question, categories]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
+    if (!formData.categoryId) {
+      alert('يرجى اختيار الدورة');
+      return;
+    }
+
+    if (!formData.stageId) {
+      alert('يرجى اختيار القسم');
+      return;
+    }
+
+    if (!formData.levelId) {
+      alert('يرجى اختيار المستوى');
+      return;
+    }
+
     if (!formData.question.trim()) {
       alert('يرجى إدخال نص السؤال');
       return;
     }
-    
+
     if (formData.options.some(opt => !opt.trim())) {
       alert('يرجى إدخال جميع الخيارات الأربعة');
       return;
     }
-    
+
     onSave(formData);
     onClose();
   };
@@ -71,8 +148,8 @@ export function QuestionFormModal({ isDark, question, onClose, onSave }: Questio
             <button
               onClick={onClose}
               className={`p-2 rounded-lg transition-all ${
-                isDark 
-                  ? 'hover:bg-red-900/30 text-red-400' 
+                isDark
+                  ? 'hover:bg-red-900/30 text-red-400'
                   : 'hover:bg-red-100 text-red-600'
               }`}
             >
@@ -83,6 +160,89 @@ export function QuestionFormModal({ isDark, question, onClose, onSave }: Questio
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Course, Section, Level Selection */}
+          <div className={`p-6 rounded-xl ${
+            isDark ? 'bg-[#1A2C2B]' : 'bg-gray-50'
+          }`}>
+            <h3 className={`text-lg mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 700 }}>
+              موقع السؤال
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Course Selection */}
+              <div>
+                <label className={`block text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 600 }}>
+                  الدورة *
+                </label>
+                <StyledSelect
+                  value={formData.categoryId || ''}
+                  onChange={(value) => setFormData({
+                    ...formData,
+                    categoryId: value,
+                    stageId: undefined,
+                    levelId: undefined,
+                  })}
+                  options={[
+                    { value: '', label: 'اختر الدورة' },
+                    ...categories.map((category) => ({
+                      value: category.id,
+                      label: `${category.icon} ${category.name}`
+                    }))
+                  ]}
+                  isDark={isDark}
+                />
+              </div>
+
+              {/* Section Selection */}
+              <div>
+                <label className={`block text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 600 }}>
+                  القسم *
+                </label>
+                <StyledSelect
+                  value={formData.stageId || ''}
+                  onChange={(value) => setFormData({
+                    ...formData,
+                    stageId: value,
+                    levelId: undefined,
+                  })}
+                  disabled={!formData.categoryId}
+                  options={[
+                    { value: '', label: 'اختر القسم' },
+                    ...stages.map((stage) => ({
+                      value: stage.id,
+                      label: stage.name
+                    }))
+                  ]}
+                  isDark={isDark}
+                />
+              </div>
+
+              {/* Level Selection */}
+              <div>
+                <label className={`block text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 600 }}>
+                  المستوى *
+                </label>
+                <StyledSelect
+                  value={formData.levelId || ''}
+                  onChange={(value) => setFormData({ ...formData, levelId: value })}
+                  disabled={!formData.stageId}
+                  options={[
+                    { value: '', label: 'اختر المستوى' },
+                    ...levels.map((level) => ({
+                      value: level.id,
+                      label: level.name
+                    }))
+                  ]}
+                  isDark={isDark}
+                />
+              </div>
+            </div>
+
+            <p className={`text-xs mt-3 ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+              💡 اختر الدورة ثم القسم ثم المستوى الذي تريد إضافة السؤال إليه
+            </p>
+          </div>
+
           {/* Question Text */}
           <div className={`p-6 rounded-xl ${
             isDark ? 'bg-[#1A2C2B]' : 'bg-gray-50'
@@ -90,7 +250,7 @@ export function QuestionFormModal({ isDark, question, onClose, onSave }: Questio
             <h3 className={`text-lg mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 700 }}>
               نص السؤال
             </h3>
-            
+
             <textarea
               required
               value={formData.question}
@@ -98,7 +258,7 @@ export function QuestionFormModal({ isDark, question, onClose, onSave }: Questio
               placeholder="مثال: من هو أول الأئمة الاثني عشر عليهم السلام؟"
               rows={4}
               className={`w-full px-4 py-3 rounded-xl border-2 transition-all resize-none ${
-                isDark 
+                isDark
                   ? 'bg-[#0D1B1A] border-gray-700 text-white placeholder-gray-500 focus:border-emerald-500'
                   : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-emerald-500'
               } outline-none`}
@@ -113,14 +273,14 @@ export function QuestionFormModal({ isDark, question, onClose, onSave }: Questio
             <h3 className={`text-lg mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 700 }}>
               الخيارات (4 خيارات مطلوبة)
             </h3>
-            
+
             <div className="space-y-4">
               {formData.options.map((option, index) => (
                 <div key={index} className="relative">
                   <label className={`block text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 600 }}>
                     الخيار {index + 1}
                   </label>
-                  
+
                   <div className="flex items-center gap-3">
                     {/* Radio button for correct answer */}
                     <label className={`flex items-center justify-center w-12 h-12 rounded-xl border-2 cursor-pointer transition-all ${
@@ -162,7 +322,7 @@ export function QuestionFormModal({ isDark, question, onClose, onSave }: Questio
                       } outline-none`}
                     />
                   </div>
-                  
+
                   {formData.correctAnswer === index && (
                     <p className={`text-xs mt-2 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
                       ✓ هذا هو الجواب الصحيح
@@ -184,14 +344,14 @@ export function QuestionFormModal({ isDark, question, onClose, onSave }: Questio
             <h3 className={`text-lg mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 700 }}>
               معاينة السؤال
             </h3>
-            
+
             <div className={`p-6 rounded-xl border-2 ${
               isDark ? 'bg-[#0D1B1A] border-gray-700' : 'bg-white border-gray-200'
             }`}>
               <p className={`text-lg mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 600 }}>
                 {formData.question || 'نص السؤال سيظهر هنا...'}
               </p>
-              
+
               <div className="space-y-3">
                 {formData.options.map((option, index) => (
                   <div
@@ -240,7 +400,7 @@ export function QuestionFormModal({ isDark, question, onClose, onSave }: Questio
             <button
               type="submit"
               className={`flex-1 py-4 rounded-xl transition-all ${
-                isDark 
+                isDark
                   ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                   : 'bg-emerald-500 hover:bg-emerald-600 text-white'
               }`}
@@ -252,7 +412,7 @@ export function QuestionFormModal({ isDark, question, onClose, onSave }: Questio
               type="button"
               onClick={onClose}
               className={`flex-1 py-4 rounded-xl transition-all ${
-                isDark 
+                isDark
                   ? 'bg-gray-800 hover:bg-gray-700 text-white'
                   : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
               }`}

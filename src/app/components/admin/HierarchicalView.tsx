@@ -76,15 +76,15 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
       const response = await fetch('http://localhost:3000/api/view-all');
       if (!response.ok) throw new Error('Failed to fetch data');
       const result = await response.json();
-      setData(result);
+      setData(result.data);
 
       // Auto-expand first category, stage, and level
-      if (result.categories.length > 0) {
-        setExpandedCategories(new Set([result.categories[0].id]));
-        if (result.categories[0].stages.length > 0) {
-          setExpandedStages(new Set([result.categories[0].stages[0].id]));
-          if (result.categories[0].stages[0].levels.length > 0) {
-            setExpandedLevels(new Set([result.categories[0].stages[0].levels[0].id]));
+      if (result.data.categories.length > 0) {
+        setExpandedCategories(new Set([result.data.categories[0].id]));
+        if (result.data.categories[0].stages.length > 0) {
+          setExpandedStages(new Set([result.data.categories[0].stages[0].id]));
+          if (result.data.categories[0].stages[0].levels.length > 0) {
+            setExpandedLevels(new Set([result.data.categories[0].stages[0].levels[0].id]));
           }
         }
       }
@@ -215,7 +215,7 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
                 عرض جميع البيانات
               </h2>
               <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                هيكلية شجرة البيانات من الفئات إلى الأسئلة
+                هيكلية شجرة البيانات من الدورات إلى الأسئلة
               </p>
             </div>
           </div>
@@ -235,23 +235,23 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
             <div className={`p-4 rounded-xl ${isDark ? 'bg-gradient-to-br from-blue-600 to-blue-800' : 'bg-gradient-to-br from-[#79DAE8] to-[#0AA1DD]'}`}>
               <div className="text-white">
-                <p className="text-sm opacity-90">الفئات</p>
+                <p className="text-sm opacity-90">الدورات</p>
                 <h3 className="text-3xl font-cairo-bold">{data.summary.totalCategories}</h3>
               </div>
             </div>
             <div className={`p-4 rounded-xl ${isDark ? 'bg-gradient-to-br from-purple-600 to-purple-800' : 'bg-gradient-to-br from-purple-400 to-purple-600'}`}>
               <div className="text-white">
-                <p className="text-sm opacity-90">المراحل</p>
+                <p className="text-sm opacity-90">الأقسام</p>
                 <h3 className="text-3xl font-cairo-bold">{data.summary.totalStages}</h3>
               </div>
             </div>
-            <div className={`p-4 rounded-xl ${isDark ? 'bg-gradient-to-br from-emerald-600 to-emerald-800' : 'bg-gradient-to-br from-emerald-400 to-emerald-600)'}`}>
+            <div className={`p-4 rounded-xl ${isDark ? 'bg-gradient-to-br from-emerald-600 to-emerald-800' : 'bg-gradient-to-br from-emerald-400 to-emerald-600'}`}>
               <div className="text-white">
                 <p className="text-sm opacity-90">المستويات</p>
                 <h3 className="text-3xl font-cairo-bold">{data.summary.totalLevels}</h3>
               </div>
             </div>
-            <div className={`p-4 rounded-xl ${isDark ? 'bg-gradient-to-br from-amber-600 to-amber-800' : 'bg-gradient-to-br from-amber-400 to-amber-600)'}`}>
+            <div className={`p-4 rounded-xl ${isDark ? 'bg-gradient-to-br from-amber-600 to-amber-800' : 'bg-gradient-to-br from-amber-400 to-amber-600'}`}>
               <div className="text-white">
                 <p className="text-sm opacity-90">الأسئلة</p>
                 <h3 className="text-3xl font-cairo-bold">{data.summary.totalQuestions}</h3>
@@ -292,7 +292,7 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {category.stages.length} مراحل
+                    {category.stages.length} أقسام
                   </span>
                   <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                     {category.questionCount} أسئلة
@@ -427,11 +427,11 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
                                 </div>
                               ))}
                             </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
