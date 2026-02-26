@@ -13,3 +13,6 @@ export * from './useLearningPath';
 export * from './useCourses';
 export * from './useUsers';
 export * from './useBadges';
+export * from './useContests';
+export * from './useReels';
+export * from './useReview';
