@@ -1,10 +1,10 @@
-import { CategoriesManager } from '@/app/components/admin/CategoriesManager';
+import { CoursesManager } from '@/app/components/admin/CoursesManager';
 
-interface CategoriesPageProps {
+interface CoursesPageProps {
   isDark: boolean;
 }
 
-export function CategoriesPage({ isDark }: CategoriesPageProps) {
+export function CoursesPage({ isDark }: CoursesPageProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -17,8 +17,8 @@ export function CategoriesPage({ isDark }: CategoriesPageProps) {
         </p>
       </div>
 
-      {/* Categories Manager */}
-      <CategoriesManager isDark={isDark} />
+      {/* Courses Manager */}
+      <CoursesManager isDark={isDark} />
     </div>
   );
 }

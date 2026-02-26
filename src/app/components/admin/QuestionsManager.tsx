@@ -181,6 +181,16 @@ export function QuestionsManager({ isDark }: QuestionsManagerProps) {
                         <span className={`px-3 py-1 rounded-full text-xs ${getDifficultyColor(question.difficulty)}`}>
                           {getDifficultyAr(question.difficulty)}
                         </span>
+                        {(question as any).showAsChallenge && (
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${isDark ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-100 text-purple-700'}`} style={{ fontFamily: "'Cairo', sans-serif" }}>
+                            ⚔️ تحدي يومي
+                          </span>
+                        )}
+                        {(question as any).challengeOrder > 0 && (
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-700'}`} style={{ fontFamily: "'Cairo', sans-serif" }}>
+                            الترتيب: {(question as any).challengeOrder}
+                          </span>
+                        )}
                         <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                           تم الإنشاء: {new Date(question.createdAt).toLocaleDateString('ar-SA')}
                         </span>
@@ -294,7 +304,9 @@ function AddEditQuestionModal({ isDark, question, categories, onClose, onSave }:
     difficulty: question?.difficulty || 'MEDIUM',
     options: initialOptions,
     correctOption: question?.correctOption ?? 0,
-    explanation: question?.explanation || ''
+    explanation: question?.explanation || '',
+    showAsChallenge: question?.showAsChallenge || false,
+    challengeOrder: question?.challengeOrder ?? 0
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -397,6 +409,46 @@ function AddEditQuestionModal({ isDark, question, categories, onClose, onSave }:
               className={`w-full px-4 py-3 rounded-xl border-2 transition-all ${isDark ? 'bg-[#0D1B1A] border-[#2a5a4d] text-white focus:border-emerald-500' : 'bg-white border-gray-200 text-gray-900 focus:border-emerald-500'} outline-none`}
               placeholder="اكتب توضيحاً للإجابة الصحيحة..."
             />
+          </div>
+
+          {/* Show as Challenge Toggle */}
+          <div
+            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer select-none ${isDark ? 'bg-[#0D1B1A] border-[#2a5a4d]' : 'bg-gray-50 border-gray-200'
+              } hover:border-purple-500`}
+            onClick={() => setFormData({ ...formData, showAsChallenge: !formData.showAsChallenge })}
+          >
+            <div className={`w-12 h-6 rounded-full transition-all relative ${formData.showAsChallenge ? 'bg-purple-500' : 'bg-gray-300'}`}>
+              <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${formData.showAsChallenge ? 'left-7' : 'left-1'}`} />
+            </div>
+            <div>
+              <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif" }}>
+                عرض كتحدي يومي
+              </p>
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                سيتم عرض هذا السؤال كجزء من التحدي اليومي
+              </p>
+            </div>
+          </div>
+
+          {/* Challenge Order */}
+          <div>
+            <label className={`block mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 600 }}>
+              ترتيب التحدي
+            </label>
+            <input
+              type="number"
+              value={formData.challengeOrder ?? 0}
+              onChange={(e) => setFormData({ ...formData, challengeOrder: parseInt(e.target.value) || 0 })}
+              className={`w-full px-4 py-3 rounded-xl border-2 transition-all ${isDark
+                ? 'bg-[#0D1B1A] border-[#2a5a4d] text-white focus:border-emerald-500'
+                : 'bg-white border-gray-200 text-gray-900 focus:border-emerald-500'
+                } outline-none`}
+              placeholder="0"
+              min="0"
+            />
+            <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+              الأسئلة ذات الترتيب الأقل تظهر أولاً (0 = أعلى القائمة)
+            </p>
           </div>
 
           <div className="flex gap-3">

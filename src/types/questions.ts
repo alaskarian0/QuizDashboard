@@ -20,6 +20,8 @@ export interface Question {
   explanation?: string;
   categoryId: string;
   category?: Category;
+  showAsChallenge?: boolean;
+  challengeOrder?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -32,6 +34,8 @@ export interface CreateQuestionDto {
   correctOption: number;
   explanation?: string;
   categoryId: string;
+  showAsChallenge?: boolean;
+  challengeOrder?: number;
 }
 
 export interface UpdateQuestionDto {
@@ -42,6 +46,8 @@ export interface UpdateQuestionDto {
   correctOption?: number;
   explanation?: string;
   categoryId?: string;
+  showAsChallenge?: boolean;
+  challengeOrder?: number;
 }
 
 export interface QueryQuestionsDto {

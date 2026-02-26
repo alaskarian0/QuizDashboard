@@ -1,10 +1,21 @@
 /**
  * React Query hooks for Categories API
+ *
+ * Note: In this application, "categories" and "courses" refer to the same entity.
+ * The courses API uses the /categories endpoint, so we alias useCourses here.
+ *
+ * This hook provides a consistent naming convention for components that expect
+ * to work with categories while using the underlying courses API.
  */
 
 import { useQuery, useMutation, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
-import * as categoriesApi from '../api/categories';
-import type { Category, CreateCategoryDto, UpdateCategoryDto } from '../types/categories';
+import * as coursesApi from '../api/courses';
+import type { Course, CreateCourseDto, UpdateCourseDto } from '../types/courses';
+
+// Re-export Course as Category for type consistency
+export type Category = Course;
+export type CreateCategoryDto = CreateCourseDto;
+export type UpdateCategoryDto = UpdateCourseDto;
 
 // Query keys
 export const categoryKeys = {
@@ -14,7 +25,7 @@ export const categoryKeys = {
 };
 
 /**
- * Hook to fetch all categories
+ * Hook to fetch all categories (courses)
  * @param options - Additional React Query options
  * @returns Query result with categories data
  *
@@ -26,7 +37,7 @@ export const categoryKeys = {
 export function useCategories(options?: Omit<UseQueryOptions<Category[], Error>, 'queryKey' | 'queryFn'>) {
   return useQuery({
     queryKey: categoryKeys.all,
-    queryFn: () => categoriesApi.getCategories(),
+    queryFn: () => coursesApi.getCourses(),
     ...options,
   });
 }
@@ -45,7 +56,7 @@ export function useCategories(options?: Omit<UseQueryOptions<Category[], Error>,
 export function useCategory(id: string, enabled?: boolean) {
   return useQuery({
     queryKey: categoryKeys.detail(id),
-    queryFn: () => categoriesApi.getCategory(id),
+    queryFn: () => coursesApi.getCourse(id),
     enabled: enabled ?? !!id,
   });
 }
@@ -71,7 +82,7 @@ export function useCreateCategory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateCategoryDto) => categoriesApi.createCategory(data),
+    mutationFn: (data: CreateCategoryDto) => coursesApi.createCourse(data),
     onSuccess: () => {
       // Invalidate and refetch categories list
       queryClient.invalidateQueries({ queryKey: categoryKeys.all });
@@ -101,7 +112,7 @@ export function useUpdateCategory() {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateCategoryDto }) =>
-      categoriesApi.updateCategory(id, data),
+      coursesApi.updateCourse(id, data),
     onSuccess: (_, variables) => {
       // Invalidate specific category and list
       queryClient.invalidateQueries({ queryKey: categoryKeys.detail(variables.id) });
@@ -131,7 +142,7 @@ export function useDeleteCategory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => categoriesApi.deleteCategory(id),
+    mutationFn: (id: string) => coursesApi.deleteCourse(id),
     onSuccess: () => {
       // Invalidate categories list
       queryClient.invalidateQueries({ queryKey: categoryKeys.all });

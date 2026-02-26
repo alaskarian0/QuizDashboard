@@ -3,6 +3,8 @@ export interface Unit {
     title: string;
     description?: string;
     order: number;
+    showInLibrary?: boolean;
+    libraryOrder?: number;
     nodes: Node[];
     createdAt: string;
     updatedAt: string;
@@ -15,6 +17,8 @@ export interface Node {
     content?: string;
     order: number;
     unitId: string;
+    showInLibrary?: boolean;
+    libraryOrder?: number;
     createdAt: string;
     updatedAt: string;
 }
@@ -23,12 +27,16 @@ export interface CreateUnitDto {
     title: string;
     description?: string;
     order: number;
+    showInLibrary?: boolean;
+    libraryOrder?: number;
 }
 
 export interface UpdateUnitDto {
     title?: string;
     description?: string;
     order?: number;
+    showInLibrary?: boolean;
+    libraryOrder?: number;
 }
 
 export interface CreateNodeDto {
@@ -37,6 +45,8 @@ export interface CreateNodeDto {
     content?: string;
     unitId: string;
     order: number;
+    showInLibrary?: boolean;
+    libraryOrder?: number;
 }
 
 export interface UpdateNodeDto {
@@ -45,6 +55,8 @@ export interface UpdateNodeDto {
     content?: string;
     unitId?: string;
     order?: number;
+    showInLibrary?: boolean;
+    libraryOrder?: number;
 }
 
 export interface LearningPathWithProgress {

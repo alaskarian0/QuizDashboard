@@ -5,7 +5,7 @@ import { LoginScreen } from '@/app/components/LoginScreen';
 import { AdminLayout } from '@/app/components/AdminLayout';
 import { DashboardPage } from '@/app/pages/DashboardPage';
 import { QuestionsPage } from '@/app/pages/QuestionsPage';
-import { CategoriesPage } from '@/app/pages/CategoriesPage';
+import { CoursesPage } from '@/app/pages/CoursesPage';
 import { UsersPage } from '@/app/pages/UsersPage';
 import { LibraryPage } from '@/app/pages/LibraryPage';
 import { HierarchicalViewPage } from '@/app/pages/HierarchicalViewPage';
@@ -96,7 +96,7 @@ function AppContent() {
         >
           <Route path="dashboard" element={<DashboardPage isDark={isDark} />} />
           <Route path="questions" element={<QuestionsPage isDark={isDark} />} />
-          <Route path="categories" element={<CategoriesPage isDark={isDark} />} />
+          <Route path="courses" element={<CoursesPage isDark={isDark} />} />
           <Route path="users" element={<UsersPage isDark={isDark} />} />
           <Route path="library" element={<LibraryPage isDark={isDark} />} />
           <Route path="hierarchical-view" element={<HierarchicalViewPage isDark={isDark} />} />

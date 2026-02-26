@@ -230,6 +230,20 @@ export function LibraryManager({ isDark }: LibraryManagerProps) {
                   </div>
 
                   <p className={`text-sm mb-3 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{unit.description}</p>
+
+                  {/* Library Badges */}
+                  <div className="flex flex-wrap gap-2">
+                    {unit.showInLibrary && (
+                      <div className={`px-3 py-1 rounded-full text-xs font-semibold ${isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-700'}`} style={{ fontFamily: "'Cairo', sans-serif" }}>
+                        📚 في المكتبة
+                      </div>
+                    )}
+                    {unit.libraryOrder !== undefined && unit.libraryOrder > 0 && (
+                      <div className={`px-3 py-1 rounded-full text-xs font-semibold ${isDark ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-100 text-purple-700'}`} style={{ fontFamily: "'Cairo', sans-serif" }}>
+                        ترتيب: {unit.libraryOrder}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -487,6 +501,47 @@ function TopicFormModal({ isDark, unit, onClose, onSave }: TopicFormModalProps) 
                   : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500'
               } outline-none`}
             />
+          </div>
+
+          {/* Show in Library Toggle */}
+          <div
+            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer select-none ${isDark ? 'bg-[#0D1B1A] border-[#2a5a4d]' : 'bg-gray-50 border-gray-200'
+              } hover:border-blue-500`}
+            onClick={() => setFormData({ ...formData, showInLibrary: !formData.showInLibrary })}
+          >
+            <div className={`w-12 h-6 rounded-full transition-all relative ${formData.showInLibrary ? 'bg-blue-500' : 'bg-gray-300'}`}>
+              <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${formData.showInLibrary ? 'left-7' : 'left-1'}`} />
+            </div>
+            <div>
+              <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif" }}>
+                عرض في المكتبة
+              </p>
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                سيتم عرض هذا الموضوع في قسم المكتبة للتطبيق
+              </p>
+            </div>
+          </div>
+
+          {/* Library Order */}
+          <div>
+            <label className={`block mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 600 }}>
+              ترتيب العرض في المكتبة
+            </label>
+            <input
+              type="number"
+              value={formData.libraryOrder ?? 0}
+              onChange={(e) => setFormData({ ...formData, libraryOrder: parseInt(e.target.value) || 0 })}
+              className={`w-full px-4 py-3 rounded-xl border-2 transition-all ${
+                isDark
+                  ? 'bg-[#0D1B1A] border-[#2a5a4d] text-white focus:border-blue-500'
+                  : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500'
+              } outline-none`}
+              placeholder="0"
+              min="0"
+            />
+            <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+              العناصر ذات الترتيب الأقل تظهر أولاً (0 = أعلى القائمة)
+            </p>
           </div>
 
           {/* Lessons Section */}

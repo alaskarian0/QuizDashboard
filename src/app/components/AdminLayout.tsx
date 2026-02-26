@@ -33,7 +33,7 @@ export function AdminLayout({ isDark, onToggleTheme }: AdminLayoutProps) {
   const menuItems: MenuItem[] = [
     { id: 'overview', path: '/admin/dashboard', icon: LayoutDashboard, label: 'لوحة القيادة', color: 'emerald' },
     { id: 'questions', path: '/admin/questions', icon: FileQuestion, label: 'إدارة الأسئلة', color: 'blue' },
-    { id: 'categories', path: '/admin/categories', icon: BookOpen, label: 'إدارة الدورات', color: 'purple' },
+    { id: 'courses', path: '/admin/courses', icon: BookOpen, label: 'إدارة الدورات', color: 'purple' },
     { id: 'users', path: '/admin/users', icon: Users, label: 'إدارة المستخدمين', color: 'amber' },
     { id: 'library', path: '/admin/library', icon: Library, label: 'إدارة المكتبة', color: 'indigo' },
     { id: 'hierarchical', path: '/admin/hierarchical-view', icon: Network, label: 'عرض شجري البيانات', color: 'teal' },
