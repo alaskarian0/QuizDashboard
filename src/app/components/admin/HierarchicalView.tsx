@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight, FolderOpen, Folder, FileText, BookOpen, Loader2, AlertCircle, RefreshCw, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { StyledSelect } from './StyledSelect';
+import { apiClient } from '../../../api/client';
+import { useCreateStage, useCreateLevel } from '../../../hooks';
+import type { CreateStageDto, CreateLevelDto } from '../../../types/stages';
 
 interface HierarchicalViewProps {
   isDark: boolean;
@@ -15,7 +18,7 @@ interface Question {
   options: string[];
 }
 
-interface Level {
+interface UiLevel {
   id: string;
   name: string;
   description: string | null;
@@ -26,13 +29,13 @@ interface Level {
   questions: Question[];
 }
 
-interface Stage {
+interface UiStage {
   id: string;
   name: string;
   slug: string;
   description: string | null;
   order: number;
-  levels: Level[];
+  levels: UiLevel[];
   levelCount: number;
   questionCount: number;
 }
@@ -44,7 +47,7 @@ interface Category {
   icon: string | null;
   color: string | null;
   description: string | null;
-  stages: Stage[];
+  stages: UiStage[];
   questionCount: number;
 }
 
@@ -80,11 +83,13 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
 
   // Form state
   const [stageForm, setStageForm] = useState({ name: '', description: '', order: 0 });
-  const [levelForm, setLevelForm] = useState({ name: '', description: '', order: 0, xpReward: 100, difficulty: 'MEDIUM' });
+  const [levelForm, setLevelForm] = useState({ name: '', description: '', order: 0, xpReward: 100, difficulty: 'MEDIUM' as const });
 
-  // Loading states for create operations
-  const [isCreatingStage, setIsCreatingStage] = useState(false);
-  const [isCreatingLevel, setIsCreatingLevel] = useState(false);
+  // Use mutations for create operations
+  const createStageMutation = useCreateStage();
+  const createLevelMutation = useCreateLevel();
+
+  // Loading state for add question operation
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
 
   // Question search state
@@ -215,32 +220,17 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
       return;
     }
 
-    setIsCreatingStage(true);
+    const slug = stageForm.name.toLowerCase().replace(/\s+/g, '-');
+    const stageData: CreateStageDto = {
+      name: stageForm.name,
+      slug,
+      description: stageForm.description || undefined,
+      order: stageForm.order,
+      categoryId: selectedCategoryId
+    };
+
     try {
-      const token = localStorage.getItem('access_token');
-      const slug = stageForm.name.toLowerCase().replace(/\s+/g, '-');
-
-      const response = await fetch('http://localhost:3000/api/stages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name: stageForm.name,
-          slug,
-          description: stageForm.description,
-          order: stageForm.order,
-          categoryId: selectedCategoryId
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create stage');
-      }
-
-      const result = await response.json();
+      const result = await createStageMutation.mutateAsync(stageData);
       toast.success('تم إضافة القسم بنجاح');
       setShowStageModal(false);
 
@@ -277,8 +267,6 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'فشل إضافة القسم');
       console.error(error);
-    } finally {
-      setIsCreatingStage(false);
     }
   };
 
@@ -289,32 +277,17 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
       return;
     }
 
-    setIsCreatingLevel(true);
+    const levelData: CreateLevelDto = {
+      name: levelForm.name,
+      description: levelForm.description || undefined,
+      order: levelForm.order,
+      xpReward: levelForm.xpReward,
+      difficulty: levelForm.difficulty,
+      stageId: selectedStageId
+    };
+
     try {
-      const token = localStorage.getItem('access_token');
-
-      const response = await fetch('http://localhost:3000/api/levels', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name: levelForm.name,
-          description: levelForm.description,
-          order: levelForm.order,
-          xpReward: levelForm.xpReward,
-          difficulty: levelForm.difficulty,
-          stageId: selectedStageId
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create level');
-      }
-
-      const result = await response.json();
+      const result = await createLevelMutation.mutateAsync(levelData);
       toast.success('تم إضافة المستوى بنجاح');
       setShowLevelModal(false);
 
@@ -361,8 +334,6 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'فشل إضافة المستوى');
       console.error(error);
-    } finally {
-      setIsCreatingLevel(false);
     }
   };
 
@@ -375,15 +346,13 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
     setQuestionPage(1);
     setShowQuestionModal(true);
 
-    // Fetch available questions for this category
+    // Fetch available questions for this category using apiClient
     try {
-      const response = await fetch(`http://localhost:3000/api/questions?categoryId=${categoryId}`);
-      if (response.ok) {
-        const result = await response.json();
-        setAvailableQuestions(result.data || result);
-      }
+      const result = await apiClient.get(`/questions?categoryId=${categoryId}`);
+      setAvailableQuestions(result.data || result);
     } catch (error) {
       console.error('Failed to fetch questions:', error);
+      toast.error('فشل تحميل الأسئلة');
     }
   };
 
@@ -498,20 +467,9 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
 
     setIsAddingQuestion(true);
     try {
-      const token = localStorage.getItem('access_token');
-
-      // Update each question to link it to this level
+      // Update each question to link it to this level using apiClient
       const updatePromises = Array.from(selectedQuestions).map(questionId =>
-        fetch(`http://localhost:3000/api/questions/${questionId}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            levelId: selectedLevelId
-          })
-        })
+        apiClient.patch(`/questions/${questionId}`, { levelId: selectedLevelId })
       );
 
       await Promise.all(updatePromises);
@@ -1071,12 +1029,12 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={createStage}
-                  disabled={isCreatingStage}
+                  disabled={createStageMutation.isPending}
                   className={`flex-1 py-3 rounded-xl font-cairo-semibold flex items-center justify-center gap-2 ${
                     isDark ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-emerald-500 text-white hover:bg-emerald-600'
-                  } ${isCreatingStage ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  } ${createStageMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  {isCreatingStage ? (
+                  {createStageMutation.isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span>جاري الإضافة...</span>
@@ -1087,10 +1045,10 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
                 </button>
                 <button
                   onClick={() => setShowStageModal(false)}
-                  disabled={isCreatingStage}
+                  disabled={createStageMutation.isPending}
                   className={`flex-1 py-3 rounded-xl font-cairo-semibold ${
                     isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  } ${isCreatingStage ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  } ${createStageMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   إلغاء
                 </button>
@@ -1208,12 +1166,12 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={createLevel}
-                  disabled={isCreatingLevel}
+                  disabled={createLevelMutation.isPending}
                   className={`flex-1 py-3 rounded-xl font-cairo-semibold flex items-center justify-center gap-2 ${
                     isDark ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-emerald-500 text-white hover:bg-emerald-600'
-                  } ${isCreatingLevel ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  } ${createLevelMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  {isCreatingLevel ? (
+                  {createLevelMutation.isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span>جاري الإضافة...</span>
@@ -1224,10 +1182,10 @@ export function HierarchicalView({ isDark }: HierarchicalViewProps) {
                 </button>
                 <button
                   onClick={() => setShowLevelModal(false)}
-                  disabled={isCreatingLevel}
+                  disabled={createLevelMutation.isPending}
                   className={`flex-1 py-3 rounded-xl font-cairo-semibold ${
                     isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  } ${isCreatingLevel ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  } ${createLevelMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   إلغاء
                 </button>

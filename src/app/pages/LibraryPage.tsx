@@ -13,7 +13,7 @@ export function LibraryPage({ isDark }: LibraryPageProps) {
           إدارة المكتبة
         </h2>
         <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-          إضافة وتعديل المحتوى التعليمي (كتب، مقالات، فيديوهات)
+          إضافة وتعديل المحتوى التعليمي (مقالات، دروس، بودكاست، كتب)
         </p>
       </div>
 

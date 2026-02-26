@@ -8,6 +8,7 @@ import { QuestionsPage } from '@/app/pages/QuestionsPage';
 import { CoursesPage } from '@/app/pages/CoursesPage';
 import { UsersPage } from '@/app/pages/UsersPage';
 import { LibraryPage } from '@/app/pages/LibraryPage';
+import { LearningPathPage } from '@/app/pages/LearningPathPage';
 import { HierarchicalViewPage } from '@/app/pages/HierarchicalViewPage';
 import { useAuth } from '@/hooks/useAuth';
 import { Toaster } from '@/app/components/ui/sonner';
@@ -99,6 +100,7 @@ function AppContent() {
           <Route path="courses" element={<CoursesPage isDark={isDark} />} />
           <Route path="users" element={<UsersPage isDark={isDark} />} />
           <Route path="library" element={<LibraryPage isDark={isDark} />} />
+          <Route path="learning-path" element={<LearningPathPage isDark={isDark} />} />
           <Route path="hierarchical-view" element={<HierarchicalViewPage isDark={isDark} />} />
         </Route>
 

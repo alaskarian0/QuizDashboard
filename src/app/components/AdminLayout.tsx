@@ -9,6 +9,7 @@ import {
   Moon,
   Sun,
   Network,
+  GraduationCap,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -35,7 +36,8 @@ export function AdminLayout({ isDark, onToggleTheme }: AdminLayoutProps) {
     { id: 'questions', path: '/admin/questions', icon: FileQuestion, label: 'إدارة الأسئلة', color: 'blue' },
     { id: 'courses', path: '/admin/courses', icon: BookOpen, label: 'إدارة الدورات', color: 'purple' },
     { id: 'users', path: '/admin/users', icon: Users, label: 'إدارة المستخدمين', color: 'amber' },
-    { id: 'library', path: '/admin/library', icon: Library, label: 'إدارة المكتبة', color: 'indigo' },
+    { id: 'learning-path', path: '/admin/learning-path', icon: GraduationCap, label: 'المسار التعليمي', color: 'rose' },
+    { id: 'library', path: '/admin/library', icon: Library, label: 'المحتوى التعليمي', color: 'indigo' },
     { id: 'hierarchical', path: '/admin/hierarchical-view', icon: Network, label: 'عرض شجري البيانات', color: 'teal' },
   ];
 
