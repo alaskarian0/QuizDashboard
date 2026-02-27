@@ -135,8 +135,8 @@ export function useLikeArticle() {
 
   return useMutation({
     mutationFn: (id: string) => libraryApi.likeArticle(id),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: libraryKeys.articles.detail(variables.id) });
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: libraryKeys.articles.detail(id) });
       queryClient.invalidateQueries({ queryKey: libraryKeys.articles.lists() });
     },
   });
